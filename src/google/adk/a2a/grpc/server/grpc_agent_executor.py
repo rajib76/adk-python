@@ -235,6 +235,27 @@ class GrpcAgentExecutor(a2a_pb2_grpc.A2AServiceServicer):
     try:
       runner = await self._resolve_runner()
       
+      # Get session
+      session = await self._get_or_create_session(runner, request)
+
+      # Create invocation context for conversion
+      invocation_context = runner._new_invocation_context(
+          session=session,
+          new_message=None,
+          run_config=None,
+      )
+      
+      # Convert proto message to ADK event
+      adk_event = self._proto_to_adk.convert_message(
+          request.request,
+          author='user',
+          invocation_context=invocation_context,
+      )
+
+      if not adk_event or not adk_event.content:
+        logger.warning("Received empty message content")
+        return
+
       # Update to working
       response = a2a_pb2.StreamResponse()
       response.status_update.task_id = task.id
@@ -246,8 +267,23 @@ class GrpcAgentExecutor(a2a_pb2_grpc.A2AServiceServicer):
       response.status_update.final = False
       yield response
       
-      # Execute and stream (simplified)
-      # Full implementation would stream ADK events
+      # Execute and stream
+      async for event in runner.run_async(
+          session_id=session.id,
+          user_id=session.user_id,
+          new_message=adk_event.content
+      ):
+        # Convert ADK event to proto message
+        proto_msg = self._adk_to_proto.convert_event(
+            event,
+            invocation_context=invocation_context,
+            role=a2a_pb2.ROLE_AGENT
+        )
+
+        if proto_msg:
+          response = a2a_pb2.StreamResponse()
+          response.msg.CopyFrom(proto_msg)
+          yield response
       
       # Final completion
       response = a2a_pb2.StreamResponse()
