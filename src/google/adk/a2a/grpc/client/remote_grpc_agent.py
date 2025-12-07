@@ -163,7 +163,17 @@ class RemoteA2aGrpcAgent(BaseAgent):
             timeout=self.timeout,
         ):
           # Convert proto response to ADK event
-          if response.HasField('status_update'):
+          if response.HasField('msg'):
+            # Generic message (standard agent response)
+            event = self._proto_to_adk.convert_message(
+                response.msg,
+                author=self.name,
+                invocation_context=ctx
+            )
+            if event:
+              yield event
+
+          elif response.HasField('status_update'):
             event = self._convert_status_update(response.status_update, ctx)
             if event:
               yield event

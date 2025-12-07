@@ -161,6 +161,12 @@ class ProtoToAdkConverter:
           if metadata_dict.get('adk:is_long_running') is True and part.function_call:
             long_running_tool_ids.add(part.function_call.id)
     
+    role_map = {
+        a2a_pb2.ROLE_USER: 'user',
+        a2a_pb2.ROLE_AGENT: 'model',
+    }
+    adk_role = role_map.get(proto_msg.role, 'model')
+
     return Event(
         invocation_id=(
             invocation_context.invocation_id
@@ -171,7 +177,7 @@ class ProtoToAdkConverter:
         branch=invocation_context.branch if invocation_context else None,
         long_running_tool_ids=long_running_tool_ids if long_running_tool_ids else None,
         content=genai_types.Content(
-            role='model',
+            role=adk_role,
             parts=output_parts,
         ),
     )

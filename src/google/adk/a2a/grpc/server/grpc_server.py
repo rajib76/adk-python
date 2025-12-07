@@ -35,8 +35,8 @@ def create_grpc_server(
     port: int = 50051,
     max_workers: int = 10,
     credentials: Optional[grpc.ServerCredentials] = None,
-) -> grpc.Server:
-  """Create and configure a gRPC server for A2A protocol.
+) -> grpc.aio.Server:
+  """Create and configure an asyncio gRPC server for A2A protocol.
   
   Args:
     runner: ADK Runner instance to execute agents.
@@ -49,20 +49,21 @@ def create_grpc_server(
     
   Example:
     ```python
-    from google.adk.agents import Agent
-    from google.adk.runners import Runner
+    import asyncio
     from google.adk.a2a.grpc.server import create_grpc_server
     
-    agent = Agent(name="my_agent", model="gemini-2.0-flash")
-    runner = Runner(agent=agent)
-    
-    server = create_grpc_server(runner, port=50051)
-    server.start()
-    server.wait_for_termination()
+    async def run():
+      server = create_grpc_server(runner, port=50051)
+      await server.start()
+      await server.wait_for_termination()
+      
+    asyncio.run(run())
     ```
   """
-  # Create thread pool executor
-  server = grpc.server(futures.ThreadPoolExecutor(max_workers=max_workers))
+  # Create asyncio server
+  # Note: max_workers is not used for asyncio server in the same way,
+  # but kept for API compatibility. grpc.aio.server handles concurrency natively.
+  server = grpc.aio.server(futures.ThreadPoolExecutor(max_workers=max_workers))
   
   # Create and register servicer
   servicer = GrpcAgentExecutor(runner)
@@ -80,15 +81,15 @@ def create_grpc_server(
 
 
 @a2a_experimental
-def serve(
+async def serve(
     runner: Runner,
     port: int = 50051,
     max_workers: int = 10,
     credentials: Optional[grpc.ServerCredentials] = None,
 ) -> None:
-  """Create, start, and run a gRPC server (blocking).
+  """Create, start, and run an asyncio gRPC server.
   
-  This is a convenience function that creates a server and blocks
+  This is a convenience function that creates a server and waits
   until termination (e.g., Ctrl+C).
   
   Args:
@@ -96,25 +97,12 @@ def serve(
     port: Port number for the server (default: 50051).
     max_workers: Maximum number of worker threads (default: 10).
     credentials: Optional server credentials for TLS/SSL.
-    
-  Example:
-    ```python
-    from google.adk.agents import Agent
-    from google.adk.runners import Runner
-    from google.adk.a2a.grpc.server import serve
-    
-    agent = Agent(name="my_agent", model="gemini-2.0-flash")
-    runner = Runner(agent=agent)
-    
-    # This will block until Ctrl+C
-    serve(runner, port=50051)
-    ```
   """
   server = create_grpc_server(runner, port, max_workers, credentials)
-  server.start()
+  await server.start()
   logger.info('gRPC server started, listening on port %d', port)
   try:
-    server.wait_for_termination()
-  except KeyboardInterrupt:
+    await server.wait_for_termination()
+  except asyncio.CancelledError:
     logger.info('gRPC server shutting down...')
-    server.stop(grace=5)
+    await server.stop(grace=5)

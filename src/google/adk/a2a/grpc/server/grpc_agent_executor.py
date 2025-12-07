@@ -70,7 +70,7 @@ class GrpcAgentExecutor(a2a_pb2_grpc.A2AServiceServicer):
         f'Runner must be a Runner instance or callable, got {type(self._runner)}'
     )
 
-  def SendMessage(self, request, context):
+  async def SendMessage(self, request, context):
     """Handle unary SendMessage RPC.
     
     Args:
@@ -80,13 +80,7 @@ class GrpcAgentExecutor(a2a_pb2_grpc.A2AServiceServicer):
     Returns:
       SendMessageResponse proto.
     """
-    # Run async handler in event loop
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    try:
-      return loop.run_until_complete(self._send_message_async(request, context))
-    finally:
-      loop.close()
+    return await self._send_message_async(request, context)
 
   async def _send_message_async(self, request, context):
     """Async implementation of SendMessage."""
@@ -122,9 +116,9 @@ class GrpcAgentExecutor(a2a_pb2_grpc.A2AServiceServicer):
       
     except Exception as e:
       logger.error('Error in SendMessage: %s', e, exc_info=True)
-      context.abort(grpc.StatusCode.INTERNAL, str(e))
+      await context.abort(grpc.StatusCode.INTERNAL, str(e))
 
-  def SendStreamingMessage(self, request, context):
+  async def SendStreamingMessage(self, request, context):
     """Handle streaming SendStreamingMessage RPC.
     
     Args:
@@ -134,23 +128,13 @@ class GrpcAgentExecutor(a2a_pb2_grpc.A2AServiceServicer):
     Yields:
       StreamResponse protos with task updates.
     """
-    # Run async handler in event loop
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    try:
-      async_gen = self._send_streaming_message_async(request, context)
-      while True:
-        try:
-          response = loop.run_until_complete(async_gen.__anext__())
-          yield response
-        except StopAsyncIteration:
-          break
-    finally:
-      loop.close()
+    async for response in self._send_streaming_message_async(request, context):
+      yield response
 
   async def _send_streaming_message_async(self, request, context):
     """Async implementation of SendStreamingMessage."""
     try:
+      logger.info(f"Start streaming request for {request.request.context_id}")
       # Create task
       task_id = str(uuid.uuid4())
       context_id = request.request.context_id or str(uuid.uuid4())

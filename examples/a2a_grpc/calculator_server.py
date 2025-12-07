@@ -44,10 +44,14 @@ logger = logging.getLogger(__name__)
 
 def main():
   """Run the calculator gRPC server."""
+  # Get model from environment or use default
+  import os
+  model_name = os.environ.get('MODEL_NAME', 'openai/gpt-4o')
+  
   # Create a simple calculator agent
   calculator = Agent(
       name='calculator',
-      model='gemini-2.0-flash-exp',
+      model=model_name,
       instruction="""You are a helpful calculator assistant.
       Perform mathematical calculations accurately and explain your work.
       Always show the calculation steps.""",
@@ -63,12 +67,13 @@ def main():
       app_name='calculator_grpc_server'
   )
   
-  logger.info('Starting calculator gRPC server on port 50051...')
+  logger.info(f'Starting calculator gRPC server on port 50051 using model: {model_name}')
   logger.info('Press Ctrl+C to stop')
   
-  # Start gRPC server (blocking)
+  # Start gRPC server (async)
+  import asyncio
   try:
-    serve(runner, port=50051)
+    asyncio.run(serve(runner, port=50051))
   except KeyboardInterrupt:
     logger.info('Server stopped by user')
 

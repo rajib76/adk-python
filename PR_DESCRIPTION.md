@@ -61,6 +61,10 @@ The A2A protocol specification includes gRPC as a supported transport protocol. 
 - ✅ Client connects and sends messages
 - ✅ Streaming responses work correctly
 - ✅ Examples run successfully
+- ✅ Verified fix for message echoing (clients filter user-role messages)
+- ✅ Verified fix for converter crash (`AttributeError`)
+- ✅ **Crucial Fix**: Refactored server to use `grpc.aio` (native AsyncIO) to resolve `litellm` event loop conflicts
+- ✅ Verified with `gpt-4o` (requires `litellm` integration)
 
 ### Example Usage
 ```bash

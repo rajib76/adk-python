@@ -99,9 +99,11 @@ async def main():
       ):
         # We only care about the final content from the model
         if event.content and event.content.parts:
-          for part in event.content.parts:
-            if part.text:
-               logger.info('Answer: %s', part.text)
+          # Only print content from the model (ignore echoed user messages)
+          if event.content.role == 'model':
+            for part in event.content.parts:
+              if part.text:
+                 logger.info('Answer: %s', part.text)
       
       print('-' * 60)
   
