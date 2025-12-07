@@ -208,7 +208,7 @@ class GrpcAgentExecutor(a2a_pb2_grpc.A2AServiceServicer):
       
       # Convert message and run agent
       adk_event = self._proto_to_adk.convert_message(
-          request.message,
+          request.request,
           author='user',
           invocation_context=invocation_context,
       )
