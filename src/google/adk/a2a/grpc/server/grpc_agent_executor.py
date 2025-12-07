@@ -174,10 +174,10 @@ class GrpcAgentExecutor(a2a_pb2_grpc.A2AServiceServicer):
       
       # Yield initial status
       response = a2a_pb2.StreamResponse()
-      response.task_status_update.task_id = task_id
-      response.task_status_update.context_id = context_id
-      response.task_status_update.status.CopyFrom(status)
-      response.task_status_update.final = False
+      response.status_update.task_id = task_id
+      response.status_update.context_id = context_id
+      response.status_update.status.CopyFrom(status)
+      response.status_update.final = False
       yield response
       
       # Execute agent and stream updates
@@ -237,13 +237,13 @@ class GrpcAgentExecutor(a2a_pb2_grpc.A2AServiceServicer):
       
       # Update to working
       response = a2a_pb2.StreamResponse()
-      response.task_status_update.task_id = task.id
-      response.task_status_update.context_id = task.context_id
-      response.task_status_update.status.state = a2a_pb2.TASK_STATE_WORKING
+      response.status_update.task_id = task.id
+      response.status_update.context_id = task.context_id
+      response.status_update.status.state = a2a_pb2.TASK_STATE_WORKING
       timestamp = Timestamp()
       timestamp.GetCurrentTime()
-      response.task_status_update.status.timestamp.CopyFrom(timestamp)
-      response.task_status_update.final = False
+      response.status_update.status.timestamp.CopyFrom(timestamp)
+      response.status_update.final = False
       yield response
       
       # Execute and stream (simplified)
@@ -251,29 +251,29 @@ class GrpcAgentExecutor(a2a_pb2_grpc.A2AServiceServicer):
       
       # Final completion
       response = a2a_pb2.StreamResponse()
-      response.task_status_update.task_id = task.id
-      response.task_status_update.context_id = task.context_id
-      response.task_status_update.status.state = a2a_pb2.TASK_STATE_COMPLETED
+      response.status_update.task_id = task.id
+      response.status_update.context_id = task.context_id
+      response.status_update.status.state = a2a_pb2.TASK_STATE_COMPLETED
       timestamp.GetCurrentTime()
-      response.task_status_update.status.timestamp.CopyFrom(timestamp)
-      response.task_status_update.final = True
+      response.status_update.status.timestamp.CopyFrom(timestamp)
+      response.status_update.final = True
       yield response
       
     except Exception as e:
       logger.error('Error in streaming execution: %s', e, exc_info=True)
       # Yield error response
       response = a2a_pb2.StreamResponse()
-      response.task_status_update.task_id = task.id
-      response.task_status_update.context_id = task.context_id
-      response.task_status_update.status.state = a2a_pb2.TASK_STATE_FAILED
+      response.status_update.task_id = task.id
+      response.status_update.context_id = task.context_id
+      response.status_update.status.state = a2a_pb2.TASK_STATE_FAILED
       error_msg = a2a_pb2.Message()
       error_msg.message_id = str(uuid.uuid4())
       error_msg.role = a2a_pb2.ROLE_AGENT
       error_part = a2a_pb2.Part()
       error_part.text = str(e)
       error_msg.parts.append(error_part)
-      response.task_status_update.status.message.CopyFrom(error_msg)
-      response.task_status_update.final = True
+      response.status_update.status.message.CopyFrom(error_msg)
+      response.status_update.final = True
       yield response
 
   def GetTask(self, request, context):
