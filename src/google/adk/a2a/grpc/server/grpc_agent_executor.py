@@ -93,7 +93,7 @@ class GrpcAgentExecutor(a2a_pb2_grpc.A2AServiceServicer):
     try:
       # Create task
       task_id = str(uuid.uuid4())
-      context_id = request.message.context_id or str(uuid.uuid4())
+      context_id = request.request.context_id or str(uuid.uuid4())
       
       # Create initial task
       task = a2a_pb2.Task()
@@ -103,7 +103,7 @@ class GrpcAgentExecutor(a2a_pb2_grpc.A2AServiceServicer):
       # Set initial status
       status = a2a_pb2.TaskStatus()
       status.state = a2a_pb2.TASK_STATE_SUBMITTED
-      status.message.CopyFrom(request.message)
+      status.message.CopyFrom(request.request)
       timestamp = Timestamp()
       timestamp.GetCurrentTime()
       status.timestamp.CopyFrom(timestamp)
@@ -153,7 +153,7 @@ class GrpcAgentExecutor(a2a_pb2_grpc.A2AServiceServicer):
     try:
       # Create task
       task_id = str(uuid.uuid4())
-      context_id = request.message.context_id or str(uuid.uuid4())
+      context_id = request.request.context_id or str(uuid.uuid4())
       
       # Create initial task
       task = a2a_pb2.Task()
@@ -163,7 +163,7 @@ class GrpcAgentExecutor(a2a_pb2_grpc.A2AServiceServicer):
       # Set initial status
       status = a2a_pb2.TaskStatus()
       status.state = a2a_pb2.TASK_STATE_SUBMITTED
-      status.message.CopyFrom(request.message)
+      status.message.CopyFrom(request.request)
       timestamp = Timestamp()
       timestamp.GetCurrentTime()
       status.timestamp.CopyFrom(timestamp)
