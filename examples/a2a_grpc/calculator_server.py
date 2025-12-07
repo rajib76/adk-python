@@ -30,6 +30,7 @@ import logging
 
 from google.adk.agents import Agent
 from google.adk.runners import Runner
+from google.adk.sessions.in_memory_session_service import InMemorySessionService
 from google.adk.a2a.grpc.server import serve
 
 # Configure logging
@@ -52,8 +53,15 @@ def main():
       Always show the calculation steps.""",
   )
   
+  # Create session service
+  session_service = InMemorySessionService()
+  
   # Create runner
-  runner = Runner(agent=calculator)
+  runner = Runner(
+      agent=calculator,
+      session_service=session_service,
+      app_name='calculator_grpc_server'
+  )
   
   logger.info('Starting calculator gRPC server on port 50051...')
   logger.info('Press Ctrl+C to stop')

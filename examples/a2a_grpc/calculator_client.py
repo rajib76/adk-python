@@ -33,6 +33,7 @@ import logging
 
 from google.adk.a2a.grpc.client import RemoteA2aGrpcAgent
 from google.adk.runners import Runner
+from google.adk.sessions.in_memory_session_service import InMemorySessionService
 
 # Configure logging
 logging.basicConfig(
@@ -52,8 +53,15 @@ async def main():
       description='Remote calculator agent via gRPC',
   )
   
+  # Create session service
+  session_service = InMemorySessionService()
+  
   # Create runner
-  runner = Runner(agent=remote_calc)
+  runner = Runner(
+      agent=remote_calc,
+      session_service=session_service,
+      app_name='calculator_grpc_client'
+  )
   
   # Example calculations
   questions = [
