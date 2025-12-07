@@ -154,7 +154,7 @@ class RemoteA2aGrpcAgent(BaseAgent):
       
       # Create SendMessage request
       request = a2a_pb2.SendMessageRequest()
-      request.message.CopyFrom(proto_message)
+      request.request.CopyFrom(proto_message)
       
       # Call remote agent (streaming)
       try:
