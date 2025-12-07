@@ -14,4 +14,7 @@
 
 """Protocol buffer to ADK type converters."""
 
-__all__ = []
+from .proto_to_adk import ProtoToAdkConverter
+from .adk_to_proto import AdkToProtoConverter
+
+__all__ = ['ProtoToAdkConverter', 'AdkToProtoConverter']
