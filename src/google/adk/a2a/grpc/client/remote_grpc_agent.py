@@ -195,8 +195,8 @@ class RemoteA2aGrpcAgent(BaseAgent):
     proto_msg.role = a2a_pb2.ROLE_USER
     
     # Convert content parts
-    if ctx.new_message and ctx.new_message.parts:
-      for part in ctx.new_message.parts:
+    if ctx.user_content and ctx.user_content.parts:
+      for part in ctx.user_content.parts:
         proto_part = self._adk_to_proto.convert_part(part)
         if proto_part:
           proto_msg.parts.append(proto_part)
