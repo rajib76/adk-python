@@ -14,4 +14,6 @@
 
 """gRPC client components for A2A protocol."""
 
-__all__ = []
+from .remote_grpc_agent import RemoteA2aGrpcAgent
+
+__all__ = ['RemoteA2aGrpcAgent']
