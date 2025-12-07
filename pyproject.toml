@@ -97,6 +97,15 @@ a2a = [
   # go/keep-sorted end
 ]
 
+a2a-grpc = [
+  # go/keep-sorted start
+  "a2a-sdk>=0.3.4,<0.4.0",
+  "grpcio>=1.60.0,<2.0.0",
+  "grpcio-tools>=1.60.0,<2.0.0",
+  "protobuf>=4.25.0,<6.0.0",
+  # go/keep-sorted end
+]
+
 community = [
   # go/keep-sorted start
   "google-adk-community",
