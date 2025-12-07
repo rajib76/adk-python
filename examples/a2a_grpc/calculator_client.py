@@ -76,6 +76,13 @@ async def main():
   
   user_id = 'test_user'
   session_id = 'test_session'
+  
+  # Ensure session exists
+  await session_service.create_session(
+      app_name='calculator_grpc_client',
+      user_id=user_id,
+      session_id=session_id
+  )
 
   try:
     for question in questions:
