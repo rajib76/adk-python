@@ -21,6 +21,7 @@ from typing import Any, AsyncGenerator, Optional
 import uuid
 
 import grpc
+from pydantic import Field, PrivateAttr
 from google.adk.agents.base_agent import BaseAgent
 from google.adk.agents.invocation_context import InvocationContext
 from google.adk.events.event import Event
@@ -58,6 +59,18 @@ class RemoteA2aGrpcAgent(BaseAgent):
     ```
   """
 
+  # Public fields (Pydantic)
+  grpc_endpoint: str = Field(..., description="gRPC server endpoint (e.g., 'localhost:50051')")
+  credentials: Optional[grpc.ChannelCredentials] = Field(default=None, description="Optional gRPC channel credentials")
+  timeout: float = Field(default=DEFAULT_TIMEOUT, description="gRPC call timeout in seconds")
+  
+  # Private attributes (not part of Pydantic model)
+  _proto_to_adk: ProtoToAdkConverter = PrivateAttr(default_factory=ProtoToAdkConverter)
+  _adk_to_proto: AdkToProtoConverter = PrivateAttr(default_factory=AdkToProtoConverter)
+  _channel: Optional[grpc.aio.Channel] = PrivateAttr(default=None)
+  _stub: Optional[a2a_pb2_grpc.A2AServiceStub] = PrivateAttr(default=None)
+  _channel_needs_cleanup: bool = PrivateAttr(default=False)
+
   def __init__(
       self,
       name: str,
@@ -86,20 +99,14 @@ class RemoteA2aGrpcAgent(BaseAgent):
     if not grpc_endpoint:
       raise ValueError('gRPC endpoint cannot be empty')
     
-    super().__init__(name=name, description=description, **kwargs)
-    
-    self.grpc_endpoint = grpc_endpoint
-    self.credentials = credentials
-    self.timeout = timeout
-    
-    # Converters
-    self._proto_to_adk = ProtoToAdkConverter()
-    self._adk_to_proto = AdkToProtoConverter()
-    
-    # gRPC channel and stub (lazy initialization)
-    self._channel: Optional[grpc.aio.Channel] = None
-    self._stub: Optional[a2a_pb2_grpc.A2AServiceStub] = None
-    self._channel_needs_cleanup = False
+    super().__init__(
+        name=name,
+        description=description,
+        grpc_endpoint=grpc_endpoint,
+        credentials=credentials,
+        timeout=timeout,
+        **kwargs
+    )
 
   async def _ensure_channel(self) -> grpc.aio.Channel:
     """Ensure gRPC channel is available and properly configured."""
