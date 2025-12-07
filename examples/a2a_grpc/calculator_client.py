@@ -72,18 +72,29 @@ async def main():
   
   logger.info('Connecting to calculator server at localhost:50051...')
   
+  from google.genai import types
+  
+  user_id = 'test_user'
+  session_id = 'test_session'
+
   try:
     for question in questions:
       logger.info('Question: %s', question)
       
-      # Run the agent
-      result = await runner.run_async(question)
+      # Create content object
+      content = types.Content(role='user', parts=[types.Part(text=question)])
       
-      # Print the response
-      if result.content and result.content.parts:
-        for part in result.content.parts:
-          if part.text:
-            logger.info('Answer: %s', part.text)
+      # Run the agent (returns async generator of events)
+      async for event in runner.run_async(
+          user_id=user_id,
+          session_id=session_id,
+          new_message=content
+      ):
+        # We only care about the final content from the model
+        if event.content and event.content.parts:
+          for part in event.content.parts:
+            if part.text:
+               logger.info('Answer: %s', part.text)
       
       print('-' * 60)
   
